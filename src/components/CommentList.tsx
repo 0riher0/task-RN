@@ -1,16 +1,8 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Button,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Text,
-} from "react-native";
+import { View, Button, StyleSheet } from "react-native";
 import { getReplies, addComment } from "../database/CommentDB";
 import CommentItem from "./CommentItem";
 import CommentInput from "./CommentInput";
-import { SQLStatementArg } from "expo-sqlite/legacy";
 
 const CommentList = ({ comment }: any) => {
   const [replies, setReplies] = useState<any>([]);
@@ -18,36 +10,25 @@ const CommentList = ({ comment }: any) => {
 
   useEffect(() => {
     getReplies(comment.id, setReplies);
-  }, [comment.id]);
+  }, []);
 
-  const handleAddReply = (text: SQLStatementArg) => {
+  const handleAddReply = (text: any) => {
     addComment(text, comment.id);
-    getReplies(comment.id, setReplies);
-    setShowReplyInput(false);
+    getReplies(comment.id, setReplies); // Refresh replies
   };
 
   return (
     <View style={styles.commentContainer}>
       <CommentItem comment={comment} />
-
-      {replies.length > 0 && (
-        <FlatList
-          data={replies}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <CommentList comment={item} style={styles.reply} />
-          )}
-        />
-      )}
-
+      {replies.length > 0 &&
+        replies.map((reply: { id: any }) => (
+          <CommentItem key={reply.id} comment={reply} isReply />
+        ))}
       {showReplyInput && <CommentInput onSubmit={handleAddReply} />}
-
-      <TouchableOpacity
+      <Button
+        title="Reply"
         onPress={() => setShowReplyInput(!showReplyInput)}
-        style={styles.btn}
-      >
-        <Text style={styles.btnText}>Отвечать</Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 };
@@ -56,20 +37,8 @@ const styles = StyleSheet.create({
   commentContainer: {
     marginBottom: 10,
     paddingLeft: 10,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 8,
-    padding: 10,
-  },
-  reply: {
-    marginLeft: 20,
-  },
-  btn: {
-    padding: 10,
-    width: 100,
-  },
-  btnText: {
-    textAlign: "right",
-    color: "blueTextColor",
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
   },
 });
 

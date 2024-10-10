@@ -1,41 +1,30 @@
-// CommentsScreen.tsx
 import React, { useEffect, useState } from "react";
-import { View, FlatList, StyleSheet, Button } from "react-native";
+import { View, FlatList, StyleSheet } from "react-native";
+import { createTables, getComments, addComment } from "../database/CommentDB";
+import CommentList from "../components/CommentList";
 import CommentInput from "../components/CommentInput";
-import CommentItem from "../components/CommentItem";
-import {
-  createTable,
-  loadComments,
-  addComment,
-  clearDatabase,
-} from "../database/CommentDB";
 
-const CommentsScreen: React.FC = () => {
-  const [comments, setComments] = useState<any>([]);
+const CommentScreen = () => {
+  const [comments, setComments] = useState([]);
 
   useEffect(() => {
-    createTable();
-    loadComments(setComments);
+    createTables();
+    getComments(setComments);
   }, []);
 
-  const handleAddComment = (text: string, parentId: number | null) => {
-    addComment(text, parentId, (newComment) => {
-      setComments((prev: any) => [...prev, newComment]);
-    });
+  const handleAddComment = (text: string) => {
+    addComment(text);
+    getComments(setComments);
   };
 
   return (
     <View style={styles.container}>
-      <CommentInput addComment={handleAddComment} />
-
       <FlatList
         data={comments}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <CommentItem comment={item} addComment={handleAddComment} />
-        )}
+        renderItem={({ item }) => <CommentList comment={item} />}
       />
-      <Button title="Clear" onPress={clearDatabase} />
+      <CommentInput onSubmit={handleAddComment} />
     </View>
   );
 };
@@ -44,8 +33,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
   },
 });
 
-export default CommentsScreen;
+export default CommentScreen;
