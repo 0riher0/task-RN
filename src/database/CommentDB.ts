@@ -1,10 +1,10 @@
 import * as SQLite from "expo-sqlite/legacy";
 
-const db = SQLite.openDatabase("commentDB");
+const db = SQLite.openDatabase("comments.db");
 
-export const createTables = () => {
-  db.transaction((txn) => {
-    txn.executeSql(
+export const createTable = () => {
+  db.transaction((tx: any) => {
+    tx.executeSql(
       `CREATE TABLE IF NOT EXISTS comments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         text TEXT,
@@ -14,62 +14,62 @@ export const createTables = () => {
       () => {
         console.log("Table created successfully");
       },
-      (error) => {
+      (_: any, error: any) => {
         console.log("Error creating table " + error.message);
       }
     );
   });
 };
 
-export const getComments = (setComments) => {
-  db.transaction((txn) => {
-    txn.executeSql(
-      `SELECT * FROM comments WHERE parent_id IS NULL`,
-      [],
-      (tx, res) => {
-        let comments = [];
-        for (let i = 0; i < res.rows.length; i++) {
-          comments.push(res.rows.item(i));
-        }
-        setComments(comments);
-      },
-      (error) => {
-        console.log("Error fetching comments " + error.message);
-      }
-    );
-  });
-};
-
-export const getReplies = (parentId, setReplies) => {
-  db.transaction((txn) => {
-    txn.executeSql(
-      `SELECT * FROM comments WHERE parent_id = ?`,
+export const getReplies = (parentId: SQLite.SQLStatementArg, callback: any) => {
+  db.transaction((tx) => {
+    tx.executeSql(
+      "SELECT * FROM comments WHERE parent_id = ?;",
       [parentId],
-      (tx, res) => {
-        let replies = [];
-        for (let i = 0; i < res.rows.length; i++) {
-          replies.push(res.rows.item(i));
-        }
-        setReplies(replies);
+      (_, { rows }) => {
+        console.log("Fetched replies for parentId", parentId, ":", rows);
+        callback(rows._array);
       },
-      (error) => {
-        console.log("Error fetching replies " + error.message);
+      (_, error) => {
+        console.error("Error fetching replies:", error);
+        return false;
       }
     );
   });
 };
 
-export const addComment = (text, parentId = null) => {
-  db.transaction((txn) => {
-    txn.executeSql(
-      `INSERT INTO comments (text, parent_id) VALUES (?, ?)`,
-      [text, parentId],
-      (tx, res) => {
-        console.log("Comment added successfully");
+export const loadComments = (callback: any) => {
+  db.transaction((tx: any) => {
+    tx.executeSql(
+      `SELECT * FROM comments;`,
+      [],
+      (_: any, { rows: { _array } }: any) => {
+        callback(_array);
       },
-      (error) => {
-        console.log("Error adding comment " + error.message);
+      (_: any, error: any) => {
+        console.log("XatolikOlishda: ", error);
       }
     );
   });
 };
+
+export const addComment = (
+  text: string,
+  parentId: number | null,
+  callback: (comment: {
+    id: number;
+    text: string;
+    parentId: number | null;
+  }) => void
+) => {
+  db.transaction((tx: any) => {
+    tx.executeSql(
+      `INSERT INTO comments (text, parent_id) VALUES (?, ?);`,
+      [text, parentId],
+      (_: any, { insertId }: any) => callback({ id: insertId, text, parentId }),
+      (_: any, error: any) => console.error("XatolikYuborishda: ", error)
+    );
+  });
+};
+
+export default db;

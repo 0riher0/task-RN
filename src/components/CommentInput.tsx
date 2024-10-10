@@ -1,25 +1,28 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, StyleSheet } from "react-native";
+import { TextInput, Button, StyleSheet, View } from "react-native";
 
-const CommentInput = ({ onSubmit }: any) => {
-  const [text, setText] = useState("");
-
-  const handleSubmit = () => {
-    if (text.trim()) {
-      onSubmit(text);
-      setText("");
-    }
-  };
+const CommentInput = ({ onAddComment }: any) => {
+  const [newComment, setNewComment] = useState("");
 
   return (
     <View style={styles.inputContainer}>
       <TextInput
         style={styles.input}
         placeholder="Write a comment..."
-        value={text}
-        onChangeText={setText}
+        value={newComment}
+        onChangeText={setNewComment}
       />
-      <Button title="Send" onPress={handleSubmit} />
+      {newComment.length > 0 && (
+        <Button
+          title="Comment "
+          onPress={() => {
+            if (newComment.trim()) {
+              onAddComment(newComment);
+              setNewComment("");
+            }
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -27,15 +30,17 @@ const CommentInput = ({ onSubmit }: any) => {
 const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
+    justifyContent: "space-between",
+    marginVertical: 10,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    marginHorizontal: 20,
+    borderRadius: 10,
   },
   input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#ccc",
     padding: 10,
-    marginRight: 10,
+    flex: 1,
+    borderRadius: 10,
   },
 });
 

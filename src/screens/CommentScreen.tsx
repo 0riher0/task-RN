@@ -1,30 +1,52 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, FlatList, StyleSheet } from "react-native";
-import { createTables, getComments, addComment } from "../database/CommentDB";
-import CommentList from "../components/CommentList";
+import { addComment, createTable, loadComments } from "../database/CommentDB";
 import CommentInput from "../components/CommentInput";
+import CommentItem from "../components/CommentItem";
 
-const CommentScreen = () => {
-  const [comments, setComments] = useState([]);
+const CommentsScreen = () => {
+  const [comments, setComments] = useState<any>([]);
+  const [replyingTo, setReplyingTo] = useState(null);
 
   useEffect(() => {
-    createTables();
-    getComments(setComments);
+    createTable();
+    loadComments(setComments);
   }, []);
 
-  const handleAddComment = (text: string) => {
-    addComment(text);
-    getComments(setComments);
+  const handleAddComment = (text: any, parentId = null) => {
+    addComment(text, parentId, (newComment: any) => {
+      setComments([...comments, newComment]);
+    });
+  };
+
+  const handleReply = (commentId: React.SetStateAction<null>) => {
+    setReplyingTo(commentId);
   };
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={comments}
+        data={comments.filter((c: { parentId: null }) => c.parentId === null)}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <CommentList comment={item} />}
+        style={styles.flatListStyle}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <CommentItem
+            comment={item}
+            comments={comments}
+            addComment={handleAddComment}
+            handleReply={handleReply}
+            replyingTo={replyingTo}
+          />
+        )}
+        ListFooterComponent={
+          <>
+            <View style={styles.heght} />
+          </>
+        }
       />
-      <CommentInput onSubmit={handleAddComment} />
+
+      <CommentInput onAddComment={handleAddComment} />
     </View>
   );
 };
@@ -32,8 +54,15 @@ const CommentScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingBottom: 30,
+  },
+  flatListStyle: {
+    paddingHorizontal: 20,
+  },
+  heght: {
+    height: 50,
+    width: "100%",
   },
 });
 
-export default CommentScreen;
+export default CommentsScreen;
